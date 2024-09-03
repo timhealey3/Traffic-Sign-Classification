@@ -2,11 +2,12 @@ import numpy as np
 import keras
 from keras.datasets import mnist
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Input
 from keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from keras.models import Model
 from keras.layers import Flatten, Dropout
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPooling2D
 import random
@@ -57,24 +58,51 @@ X_train = X_train.reshape(34799, 32, 32, 1)
 X_test = X_test.reshape(12630, 32, 32, 1)
 X_val = X_val.reshape(4410, 32, 32, 1)
 
+datagen = ImageDataGenerator(width_shift_range=0.1,
+    height_shift_range=0.1,
+    zoom_range=0.2,
+    shear_range=0.1,
+    rotation_range=10)
+
+datagen.fit(X_train)
+
+batches = datagen.flow(X_train, y_train, batch_size=20)
+X_batch, y_batch = next(batches)
+
 y_train = to_categorical(y_train, 43)
 y_test = to_categorical(y_test, 43)
 y_val = to_categorical(y_val, 43)
 
-def leNet_model():
+def modifiedModel():
     model = Sequential()
-    model.add(Conv2D(30, (5, 5), input_shape=(32, 32, 1), activation='relu'))
+    model.add(Input(shape=(32, 32, 1)))
+    model.add(Conv2D(60, (5, 5), activation='relu'))
+    model.add(Conv2D(60, (5, 5), activation='relu'))
+
     model.add(MaxPooling2D(pool_size=(2,2)))
-    model.add(Conv2D(15, (3,3), activation='relu'))
+
+    model.add(Conv2D(30, (3,3), activation='relu'))
+    model.add(Conv2D(30, (3,3), activation='relu'))
+
     model.add(MaxPooling2D(pool_size=(2,2)))
+    #model.add(Dropout(0.5))
+
     model.add(Flatten())
     model.add(Dense(500, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(43, activation='softmax'))
-    model.compile(Adam(learning_rate = 0.01), loss='categorical_crossentropy', metrics=['accuracy'])
+
+    model.compile(Adam(learning_rate = 0.001), loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
-model = leNet_model()
-print(model.summary())
-history = model.fit(X_train, y_train, epochs=10, validation_data=(X_val, y_val), batch_size=400,
-    verbose=1, shuffle=1)
+def predictClass(model, img):
+    predictions = model.predict(img)
+    predictedClass = predictions.argmax(axis=-1)
+    return predictedClass
+
+def trainModel(model):
+    print(model.summary())
+    history = model.fit(datagen.flow(X_train, y_train, batch_size=50),
+        steps_per_epoch=2000,epochs=10,
+        validation_data=(X_val, y_val),shuffle=True)
+    return history
