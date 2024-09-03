@@ -11,9 +11,9 @@ def displayText():
     print("1. Turn Left")
     print("2. Speed Limit")
     print("3. Slippery Road")
-    print("4. Give Way")
+    print("4. Yield")
     print("5. Bicycle Crossing")
-    print("6. Paste own URL of German Traffic Sign")
+    print("6. Paste own JPG URL of German Traffic Sign")
     print("Q. Quit")
 
 def handleInput():
@@ -35,6 +35,7 @@ def handleInput():
             # byclycle crossing
             urlString = 'https://c8.alamy.com/comp/J2MRAJ/german-road-sign-bicycles-crossing-J2MRAJ.jpg'
         case "6":
+            print("The Image must be in JPG format")
             userUrl = input("Enter in URL >> ")
             urlString = userUrl
         case "q":
